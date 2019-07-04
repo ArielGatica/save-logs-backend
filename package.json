@@ -1,0 +1,28 @@
+{
+  "name": "api-backend-alarmas-noc",
+  "version": "1.0.0",
+  "description": "Proyect create for save warning logs in databaseb mongoDB",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app/index.js",
+    "docker:stop": "docker stop api-backend-logs",
+    "docker:rm": "docker rm api-backend-logs",
+    "docker:build": "docker build -t api-backend-logs .",
+    "docker:dev": "docker run -d -p 21888:21888 -e port='21888' --restart=on-failure --name=api-backend-logs -e 'NODE_ENV=dev' api-backend-logs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@172.18.252.118:portal-noc/api-backend-alarmas-noc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.6.1",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
