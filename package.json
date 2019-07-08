@@ -1,14 +1,18 @@
 {
   "name": "api-backend-alarmas-noc",
   "version": "1.0.0",
-  "description": "Proyect create for save warning logs in databaseb mongoDB",
+  "description": "Proyect create for save warning logs in database mongoDB",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app/index.js",
-    "docker:stop": "docker stop api-backend-logs",
-    "docker:rm": "docker rm api-backend-logs",
-    "docker:build": "docker build -t api-backend-logs .",
-    "docker:dev": "docker run -d -p 21888:21888 -e port='21888' --restart=on-failure --name=api-backend-logs -e 'NODE_ENV=dev' api-backend-logs"
+    "dev": "nodemon api/index.js",
+    "docker:build-dev": "docker build -t api-backend-logs-noc-dev .",
+    "docker:build-prod": "docker build -t api-backend-logs-noc-prod .",
+    "docker:dev": "docker run -p 21888:21888 -d --restart=on-failure --name=api-backend-logs-noc-dev --mount type=bind,source=/var/log/,target=/app/log -e 'NODE_ENV=dev' api-backend-logs-noc-dev",
+    "docker:prod": "docker run -p 20888:20888 -d --restart=on-failure --name=api-backend-logs-noc-prod --mount type=bind,source=/var/log/,target=/app/log -e 'NODE_ENV=prod' api-backend-logs-noc-prod",
+    "docker:stop-dev": "docker stop api-backend-logs-noc-dev",
+    "docker:stop-prod": "docker stop api-backend-logs-noc-prod",
+    "docker:rm-dev": "docker rm api-backend-logs-noc-dev",
+    "docker:rm-prod": "docker rm api-backend-logs-noc-prod"
   },
   "repository": {
     "type": "git",
