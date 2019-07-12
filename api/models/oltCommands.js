@@ -7,4 +7,4 @@ module.exports = mongoose.model('OltCommands', new Schema({
     ip: { type: String },
     user: { type: String },
     command: { type: String }
-}, { versionKey: false, timestamps: true } ));
+}, { versionKey: false, timestamps: true, collection: 'olt_commands' } ));

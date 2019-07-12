@@ -10,5 +10,9 @@ apiRoutes.route('/logs/olt-recovery/save').get(Logs.saveOltRecovery);
 apiRoutes.route('/logs/olt-fault').get(Logs.listOltFault);
 apiRoutes.route('/logs/olt-fault/save').get(Logs.saveOltFault);
 
+//OLT Commands
+apiRoutes.route('/logs/olt-commands').get(Logs.listOltCommands);
+apiRoutes.route('/logs/olt-commands/save').get(Logs.saveOltCommands);
+
 
 module.exports = apiRoutes;

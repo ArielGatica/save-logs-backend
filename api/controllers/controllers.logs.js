@@ -8,7 +8,7 @@ exports.listOltRecovery = async (req, res) =>{
         if(!err)
             res.status(200).json({ data: logsOltRecovery });
         else
-            res.status(500).send('Error al intentar leer logs: ' + err);
+            res.status(500).send('Error al intentar leer Logs OLT Recovery: ', err);
     })
 }
 
@@ -17,7 +17,16 @@ exports.listOltFault = async (req, res) =>{
         if(!err)
             res.status(200).json({ data: logsOltFault });
         else
-            res.status(400).send('Error al intentar listar Logs OLT Fault');
+            res.status(400).send('Error al intentar listar Logs OLT Fault: ', err);
+    })
+}
+
+exports.listOltCommands = async (req, res) =>{
+    await OltCommands.find((err, oltCommands) =>{
+        if(!err)
+            res.status(200).json({ data: oltCommands });
+        else
+            res.status(400).send('Error al intentar listar Logs OLT Comandos: ', err)
     })
 }
 
@@ -66,7 +75,7 @@ exports.saveOltRecovery = (req, res) =>{
                 slot_id: getDataSlot.replace(', SlotID: ', ''),
                 port_id: getDataPort.replace(', PortID: ', ''),
                 ont_id: getDataOnt.replace(', ONT ID: ', ''),
-                equipment_id : getDataEquipment ? getDataEquipment.replace(', Equipment ID: ', '') : ''
+                equipment_id : getDataEquipment.replace(', Equipment ID: ', '')
             })
             newOltRecovery.save()
         })
@@ -76,7 +85,7 @@ exports.saveOltRecovery = (req, res) =>{
         else
             res.status(500).send('Error al intentar guardar OLT Recovery');
     }).catch((err) =>{
-        res.status(400).send(err);
+        throw err;
     })
 }
 
@@ -146,5 +155,43 @@ exports.saveOltFault = (req, res) =>{
 }
 
 exports.saveOltCommands = (req, res) =>{
-    
+    const readCommands = new Promise((resolve, reject) =>{
+        fs.readFile('/var/log/fileCommands', ('utf-8'), (err, content) =>{
+            if(!err){
+                resolve(content
+                    .split('\n')
+                    .filter((telnetFilter) => { return telnetFilter.indexOf(('Telnet')) > -1})
+                    .filter((cmdFilter) => { return cmdFilter.indexOf(('cmd')) > -1})
+                );
+            }else
+                reject(err);
+        })
+    })
+    readCommands.then((response) =>{
+        const respuesta = response.map((valueResponse) =>{            
+            let getData = valueResponse.split(' ');
+
+            let searchCmd = valueResponse.search('cmd: ');
+            let getDataCmd = valueResponse.substring(searchCmd, valueResponse.length+1);
+
+            let searchTelnet = valueResponse.search('Telnet');
+            let getDataIp = valueResponse.substring(searchCmd-1, searchTelnet)
+
+            let newOltCommands = new OltCommands({
+                date: getData[5],
+                ip_olt: getData[3],
+                ip: getDataIp = getDataIp.replace('Telnet ',''),
+                user: getData[9],
+                command: getDataCmd.replace('cmd: ','')
+            })
+            newOltCommands.save()
+        })
+        if(respuesta != undefined)
+        res.status(200).send('Logs OLT Commands guardados correctamente');
+        else
+            res.status(500).send('Error al intentar guardar OLT Commands');
+    })
+    .catch((err) =>{
+        throw err;
+    })
 }
