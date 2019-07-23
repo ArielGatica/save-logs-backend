@@ -5,6 +5,7 @@ module.exports = mongoose.model('oltFault', new Schema ({
     date: { type: Date },
     ip: { type: String},
     severity: { type: String },
+    classification: { type: String },
     alarm_name: { type: String },
     frame_id: { type: Number },
     slot_id: { type: Number },

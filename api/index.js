@@ -12,7 +12,7 @@ const MONGO_URI = config[node_env].MONGO_URI;
 //Connect to mongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true });
 
-//Midlewares
+//Middlewares
 app.use(morgan('dev'));
 app.use(express.json());
 
