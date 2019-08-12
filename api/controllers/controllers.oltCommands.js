@@ -6,13 +6,13 @@ exports.listOltCommands = async (req, res) =>{
         if(!err)
             res.status(200).json({ data: oltCommands });
         else
-            res.status(400).send('Error al intentar listar Logs OLT Comandos: ', err)
+            res.status(400).send(`Error al intentar listar Logs OLT Comandos: ${err}`)
     })
 }
 
 exports.saveOltCommands = (req, res) =>{
     const readCommands = new Promise((resolve, reject) =>{
-        fs.readFile('/var/log/fileCommands', ('utf-8'), (err, content) =>{
+        fs.readFile('/app/log/messages', ('utf-8'), (err, content) =>{
             if(!err){
                 resolve(content
                     .split('\n')
@@ -33,11 +33,11 @@ exports.saveOltCommands = (req, res) =>{
             let searchTelnet = valueResponse.search('Telnet');
             let getDataIp = valueResponse.substring(searchCmd-1, searchTelnet)
 
-            OltCommands.findOne({ date: getData[5] + ' ' + getData[6] }, (err, logsCommands) => { 
+            OltCommands.findOne({ date: getData[5] + ' ' + getData[6] }, (err, logsCommands) => {
                 if(logsCommands) 
-                    console.log("Estos datos ya existen, por ende no se guardarán en la BBDD: " + logsCommands);
+                    console.log(`Estos datos ya existen, por ende no se guardarán en la BBDD: ${logsCommands}`);
                 else if(err)
-                    console.log("Error: " + err);
+                    console.log(`Error: ${err}`);
                 else{   
                     let newOltCommands = new OltCommands({
                         date: getData[5] + ' ' + getData[6],
@@ -50,11 +50,11 @@ exports.saveOltCommands = (req, res) =>{
                 }  
             });
         })
-        
+
         if(respuesta !== undefined)
-            res.status(200).send('Logs OLT Commands guardados correctamente');
+            res.status(200).send(`Logs OLT Commands guardados correctamente`);
         else
-            res.status(500).send('Error al intentar guardar OLT Commands');
+            res.status(500).send(`Error al intentar guardar OLT Commands`);
     })
     .catch((err) =>{
         throw err;

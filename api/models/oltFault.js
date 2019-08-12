@@ -11,5 +11,6 @@ module.exports = mongoose.model('oltFault', new Schema ({
     slot_id: { type: Number },
     port_id: { type: Number },
     ont_id: { type: Number },
-    equipment_id: { type: String }
+    equipment_id: { type: String },
+    olt_recovery_id: { type: String }
 }, { versionKey: false, timestamps: true, collection: 'olt_fault' }));

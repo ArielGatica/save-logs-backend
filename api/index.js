@@ -10,7 +10,7 @@ const PORT = config[node_env].PORT;
 const MONGO_URI = config[node_env].MONGO_URI;
 
 //Connect to mongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true });
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useFindAndModify: false });
 
 //Middlewares
 app.use(morgan('dev'));
