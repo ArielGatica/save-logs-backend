@@ -1,22 +1,21 @@
+const config = require('../config');
 const OltFault = require('../models/oltFault');
 const fs = require('fs');
+const moment = require('moment-timezone');
 
 exports.listOltFault = async (req, res) =>{
     await OltFault.find((err, logsOltFault) =>{
-        if(!err){
-            let getClass = logsOltFault.map(mapLogs => mapLogs.classification)
-
-
-            res.status(200).json({ data: getClass });
-        }
+        if(!err)
+            res.status(200).json({ oltFault: logsOltFault });
         else
             res.status(400).send(`Error al intentar listar Logs OLT Fault: ${err}`);
     })
 }
 
 exports.saveOltFault = (req, res) =>{
+    const dateFilter = new moment().tz('America/Santiago').format('YYYY-MM-DD-HH');
     const readLogs = new Promise((resolve, reject) =>{
-        fs.readFile('/app/log/messages', ('utf-8'), (err, content) =>{
+        fs.readFile(`${ config.prod.FILE_LOGS + dateFilter }.log`, ('utf-8'), (err, content) =>{
             if(!err){
                 resolve(content
                     .split('\n')
@@ -30,46 +29,17 @@ exports.saveOltFault = (req, res) =>{
     readLogs.then((response) =>{
         const respuesta = response.map((valueResponse) => {
 
-            let getDate = valueResponse.split(' ');
-
+            let getData = valueResponse.split(' ');
+            let getDates = getData[0].split('.');
             let getSearchZ = valueResponse.search('Z');
             let getSearchCat =  valueResponse.search('#');
             let getDataIp = valueResponse.substring(getSearchZ+1, getSearchCat-1);
-        
             let getSearch = valueResponse.search('ALARM NAME :');
             let getSearch2 = valueResponse.search('  PARAMETERS');
             let getDataName = valueResponse.substring(getSearch, getSearch2);
-
-            let getSearchFrame = valueResponse.search(':FrameID: ');
-            let getSearchFrame2 = valueResponse.search(', SlotID: ');
-            let getDataFrame = valueResponse.substring(getSearchFrame, getSearchFrame2);
-            let frameOnlyNumbers = getDataFrame.replace('#', '');
-
-            let getSearchSlot = valueResponse.search(', PortID: ');
-            let getDataSlot = valueResponse.substring(getSearchFrame2, getSearchSlot);
-            let slotOnlyNumbers = getDataSlot.replace('#', '');
-
-            let getSearchPort = valueResponse.search(', ONT ID: '); //getSearchSlot, getSearchPort !== -1 ? getSearchPort : valueResponse.length+getSearchSlot
-            let getDataPort = valueResponse.substring(getSearchSlot, getSearchPort !== -1 ? getSearchPort : valueResponse.length+getSearchSlot);
-            let portOnlyNumbers = getDataPort.replace('#', '');
-
-            let getSearchOnt = valueResponse.search(', Equipment ID: ');
-            let getDataOnt = valueResponse.substring(getSearchPort , getSearchOnt !== -1 ? getSearchOnt : valueResponse.length-getSearchOnt);
-            let ontOnlyNumbers = getDataOnt.replace('#', '');
-
-            let getDataEquipment = valueResponse.substring(getSearchOnt !== -1 ? getSearchOnt : valueResponse.length+getSearchOnt, valueResponse.length+1);
-
-            let obtenerName = getDataName.replace('ALARM NAME :', '')
-
-
-            let dot = valueResponse.indexOf(', PortID: ');
-            let test = valueResponse.indexOf(', ONT ID: ');
-
-            let getDataTest = valueResponse.substring(dot, test !== -1 ? test : valueResponse.length+dot)
-
-            /*console.log(test)
-            console.log(getDataTest)            
-            return false*/
+            let obtenerName = getDataName.replace('ALARM NAME :', '');
+            let splitParameters = valueResponse.split('PARAMETERS :');
+            let getParameters = splitParameters[1].split(',');
 
             //OLT CLASSIFICATION
             let oltClass = '';
@@ -137,24 +107,23 @@ exports.saveOltFault = (req, res) =>{
             else if(valueResponse.indexOf('FAULT MINOR') !== -1)
                 oltSeverity = 'FAULT MINOR';
 
-
-            OltFault.findOne({ date: getDate[5] + ' ' + getDate[6], severity: oltSeverity }, (err, logsOltFault) =>{
+            OltFault.findOne({ date: getDates[0], severity: oltSeverity }, (err, logsOltFault) =>{
                 if(err)
                     console.log(`Error: ${err}`);
                 else if(logsOltFault)
                     console.log(`Estos datos ya existen, por ende no se guardarán en la BBDD: ${logsOltFault}`);
                 else{
                     let newOltFault = new OltFault({
-                        date: getDate[5] + ' ' + getDate[6],
-                        ip: getDate[3],
+                        date: getDates[0],
+                        ip: getDataIp.replace(' ', ''),
                         severity: oltSeverity,
                         alarm_name: getDataName.replace('ALARM NAME :', ''),
                         classification: oltClass,
-                        frame_id: frameOnlyNumbers.replace(':FrameID: ', ''),
-                        slot_id: slotOnlyNumbers.replace(', SlotID: ', ''),
-                        port_id: portOnlyNumbers.replace(', PortID: ', ''),
-                        ont_id: getDataOnt == -1 ? 522 : ontOnlyNumbers.replace(', ONT ID: ', ''),
-                        equipment_id : getDataEquipment !== '' && getDataEquipment.length !== 1  ? getDataEquipment.replace(', Equipment ID: ', '') : ''
+                        frame_id: getParameters[0] !== undefined ? getParameters[0].replace('FrameID: ', '') : '',
+                        slot_id: getParameters[1] !== undefined ? getParameters[1].replace(' SlotID: ', '') : '',
+                        port_id: getParameters[2] !== undefined ? getParameters[2].replace(' PortID: ', '') : '',
+                        ont_id: getParameters[3] !== undefined ? getParameters[3].replace(' ONT ID: ', '') : '',
+                        equipment_id: getParameters[4] !== undefined ? getParameters[4].replace(' Equipment ID: ', '') : ''
                     })
                     newOltFault.save();
                 }

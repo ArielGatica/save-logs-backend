@@ -10,17 +10,19 @@ exports.findAlarmsDictionary = async (req, res) =>{
 }
 
 exports.saveAlarmsDictionary = async (req, res) =>{
-    let newAlarmsDictionary = new AlarmsDictionary({
-        fault: req.body.fault,
-        recovery: req.body.recovery
-    })  
-    await newAlarmsDictionary.save((err) => {
-        if(!err)
-            res.status(200).send({ message: 'Diccionario OLT guardado correctamente' });
-        else
-            res.status(500).send({ message: `Error al intentar guardar Diccionario OLT: ${err}`});
-    })
-    
+    if(req.body.fault !== '' && req.body.recovery !== ''){
+        let newAlarmsDictionary = new AlarmsDictionary({
+            fault: req.body.fault,
+            recovery: req.body.recovery
+        })  
+        await newAlarmsDictionary.save((err) => {
+            if(!err)
+                res.status(200).send({ message: 'Diccionario OLT agregado correctamente' });
+            else
+                res.status(500).send({ message: `Error al intentar agregar Diccionario OLT: ${err}`});
+        })
+    }else
+        res.status(400).send({ message: 'Error al intentar agregar Diccionario OLT, los campos no pueden estar vacíos. Inténtelo nuevamente' });    
 }
 
 exports.editAlarmsDictionary = async (req, res) =>{
@@ -32,7 +34,7 @@ exports.editAlarmsDictionary = async (req, res) =>{
                 fault: req.body.fault,
                 recovery: req.body.recovery
             }
-            
+
             AlarmsDictionary.findByIdAndUpdate({ _id: req.body._id },{ $set: editAlarm }, (err) =>{
                 if(!err)
                     res.status(200).send({ message: 'Diccionario de alarmas editado correctamente' });
@@ -49,7 +51,7 @@ exports.removeAlarmsDictionary = async (req, res) =>{
         if(alarmsDictionary){
             alarmsDictionary.remove((err) =>{
                 if(!err)
-                    res.status(200).send({ message: 'Diccionario de alarmas eliminado correctamente' });
+                    res.status(200).send({ message: 'Registro de Diccionario de alarmas eliminado correctamente' });
                 else
                     res.status(500).send({ message: `Error al intentat eliminar Diccionario de alarmas: ${err}` })
             })
